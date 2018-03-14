@@ -1,0 +1,15 @@
+{
+  "secret": "!@#$%^&*()",
+  "admin": {
+    "account": "admin",
+    "pwd": "aispeech"
+  },
+  "news": {
+    "account": "news",
+    "pwd": "aispeech"
+  },
+  "docs": {
+    "account": "docs",
+    "pwd": "aispeech"
+  }
+}
