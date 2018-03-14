@@ -1,31 +1,23 @@
-<template lang="html">
+<template>
   <div class="markdownBox">
-      <div class="editor-btn-group">
-        <el-button type="primary" class="uploadImg" @click="dialogVisible=true">图片资源</el-button>
-        <el-button type="primary" class="saveBtn" @click="saveEvent">保存</el-button>
-      </div>
-      <div class="markdownInputIframe">
-        <textarea :value="input" @input="updateInput" class="contextBox  grey-scroll"></textarea>
-      </div>
-      <div class="markdownOutputIframe  grey-scroll">
-        <div v-html="compiledMarkdown" class="contextBox markdown-body grey-scroll"></div>
-      </div>
-    <el-dialog
-      title="图片资源操作"
-      size="large"
-      v-model="dialogVisible">
+    <div class="editor-btn-group">
+      <el-button type="primary" class="uploadImg" @click="dialogVisible=true">图片资源</el-button>
+      <el-button type="primary" class="saveBtn" @click="saveEvent">保存</el-button>
+    </div>
+    <div class="markdownInputIframe">
+      <textarea :value="input" @input="updateInput" class="contextBox  grey-scroll"></textarea>
+    </div>
+    <div class="markdownOutputIframe grey-scroll">
+      <div v-html="compiledMarkdown" class="contextBox markdown-body grey-scroll"></div>
+    </div>
+    <el-dialog title="图片资源操作" size="large" v-model="dialogVisible">
       <div class="img_contain">
-        <el-upload
-          :action="'/docsserver/mdimg/' + code"
-          :multiple="true"
-          :data="{id:$route.params.md}"
-          :headers="{token:token}"
-          :on-success="loadImgs">
+        <el-upload :action="'/docsserver/mdimg/' + code" :multiple="true" :data="{id:$route.params.md}" :headers="{token:token}" :on-success="loadImgs">
           <el-button size="small" type="primary">点击上传</el-button>
           <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
         </el-upload>
         <div class="imglist">
-          <div class="imgitem" v-for="item in fileList">
+          <div class="imgitem" v-for="(item, index) in fileList" :key="index">
             <p>{{item.name}}</p>
             <div>
               <img width="100%" :src="item.url" alt="">
@@ -165,7 +157,7 @@ export default {
 <style lang="scss" scoped>
 .editor-btn-group {
   position: absolute;
-  top: -50px;
+  top: -5px;
   right: 0;
 }
 .markdownBox {
@@ -178,6 +170,7 @@ export default {
     height: 99.7%;
   }
   .markdownOutputIframe {
+    padding-top: 20px;
     overflow: auto;
   }
   textarea {

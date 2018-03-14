@@ -1,8 +1,8 @@
-<template lang="html">
+<template>
   <div>
-    <headnav class="header" v-if="!isAdmin"></headnav>
+    <headnav class="header"></headnav>
     <div class="main">
-      <sidebar v-if="!isAdmin" :data="sideData" v-on:update="loadSidebar"></sidebar>
+      <sidebar :data="sideData" v-on:update="loadSidebar"></sidebar>
       <div class="content">
         <transition name="fade" mode="out-in">
           <router-view></router-view>
@@ -11,7 +11,7 @@
     </div>
   </div>
 </template>
-<script type="text/javascript">
+<script>
 import headnav from "./components/headnav";
 import sidebar from "./components/sidebar";
 
@@ -31,21 +31,14 @@ export default {
       isAdmin: false
     };
   },
-  watch: {
-    $route: "judgeAdmin"
+  created() {
+    this.loadSidebar();
   },
   methods: {
     loadSidebar() {
       this.$http.get("/docsserver/sidebar").then(response => {
         this.sideData = JSON.parse(response.data.data);
       });
-    },
-    search() {
-      if (!this.skwd) {
-        return;
-      }
-      this.$router.push("/search/" + this.skwd);
-      this.skwd = "";
     },
     judgeAdmin() {
       if (
@@ -55,7 +48,6 @@ export default {
       ) {
         this.isAdmin = true;
       } else {
-        this.loadSidebar();
       }
     }
   }
@@ -79,6 +71,7 @@ html body {
   left: 260px;
   right: 0;
   bottom: 0;
+  padding: 20px 0;
 
   .markdown-body {
     padding: 0 45px;

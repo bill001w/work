@@ -1,6 +1,6 @@
-<template lang="html">
+<template>
   <div :class="{'sidebar':true, 'grey-scroll':true, 'showScroll': showScroll}" @contextmenu.prevent="rclick" @click="opDialog=false" @mouseover="mouseover" @mouseout="mouseout">
-    <div v-for="menu in data" class="accordion-title">
+    <div v-for="(menu, index) in data" class="accordion-title" :key="index">
       <tree :model="menu" :level="1"></tree>
     </div>
     <div class="rightList" v-show="opDialog===true" :style="{'top':menuTop+'px','left':menuLeft+'px'}">
@@ -11,10 +11,7 @@
       <p @click="opFile(4)" v-show="nodeIdx!='sidebar'">重命名</p>
       <p @click="opFile(5)" v-show="nodeIdx!='sidebar'">删除</p>
     </div>
-    <el-dialog
-      title="文件"
-      v-model="dialogFile"
-      size="tiny">
+    <el-dialog title="文件" v-model="dialogFile" size="tiny">
       <p>文件名(文件的命名 如:ct_skill)</p>
       <el-input v-model="fileName" placeholder="文件名[英文]"></el-input>
       <p>文档标题(侧边导航的命名 如:技能创建指南)</p>
@@ -24,10 +21,7 @@
         <el-button type="primary" @click="saveTree(1)">保 存</el-button>
       </span>
     </el-dialog>
-    <el-dialog
-      title="文档目录"
-      v-model="dialogDir"
-      size="tiny">
+    <el-dialog title="文档目录" v-model="dialogDir" size="tiny">
       <p>文档目录</p>
       <el-input v-model="dirName" placeholder="文档目录"></el-input>
       <span slot="footer" class="dialog-footer">
@@ -70,8 +64,10 @@ export default {
       if (this.$route.path.indexOf("/editor") === -1) {
         return;
       }
+
       let isRoot = false;
-      if (event.target.attributes[1].nodeValue.indexOf("sidebar") > -1) {
+
+      if (event.target.attributes[0].nodeValue.indexOf("sidebar") > -1) {
         isRoot = true;
       }
       this.nodeIdx = isRoot ? 0 : event.target.attributes[0].nodeValue;
@@ -211,11 +207,11 @@ export default {
 .sidebar {
   position: absolute;
   left: 0;
-  // top: 106px;
-  top: 95px;
+  top: 60px;
   bottom: 0;
   overflow: hidden;
   width: 260px;
+  padding-top: 30px;
   padding-left: 20px;
   background-color: #fcfcfc;
 
