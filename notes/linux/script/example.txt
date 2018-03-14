@@ -1,0 +1,466 @@
+#************************************************#
+#
+# 【例2-1】清除脚本
+#
+#************************************************#
+
+cd /var/log
+cat /dev/null > messages
+cat /dev/null > wtmp
+echo "Logs cleaned up."
+
+# 说明：
+# 1.要使用root身份来运行这个脚本.
+# 2.没有#！/bin/bash也能运行脚本，只是只能是一组命令，不能使用shell内建命令.
+
+#************************************************#
+#
+# 【例】用脚本删除文件自身
+#
+#************************************************#
+
+#!/bin/rm
+
+# 并不会执行下面.
+WHATEVER=65
+echo "This line will never print (betcha!)."
+exit $WHATEVER  
+
+
+#************************************************#
+#
+# 【例】备份最后一天所有修改的文件
+#
+#************************************************#
+
+#!/bin/bash
+
+# 备份文件名称格式，如果没有输入就用"backup-MM-DD-YYYY.tar.gz"
+BACKUPFILE=backup-$(date +%m-%d-%Y)
+archive=${1:-$BACKUPFILE}
+
+tar cvf - `find . -mtime -1 -type f -print` > $archive.tar
+gzip $archive.tar
+echo "Directory $PWD backed up in archive file \"$archive.tar.gz\"."
+
+# 上面代码如果在发现太多文件, 或者是如果文件名包括空格, 将执行失败.
+# 可使用下边的两种代码之一:
+# -------------------------------------------------------------------
+#   find . -mtime -1 -type f -print0 | xargs -0 tar rvf "$archive.tar"
+#      使用gnu版本的"find".
+
+#   find . -mtime -1 -type f -exec tar rvf "$archive.tar" '{}' \;
+# -------------------------------------------------------------------
+
+exit 0
+
+#************************************************#
+#
+# 【例】使用shift逐步存取所有的位置参数
+#
+#************************************************#
+
+#!/bin/bash
+
+until [ -z "$1" ]
+do
+	echo -n "$1"
+	shift
+done
+
+echo
+
+exit 0
+
+#************************************************#
+#
+# 【例】测试目录下的软链接
+#
+#************************************************#
+
+#!/bin/bash
+
+# 如果没有参数被传递到脚本中，那么就使用当前目录
+[ $# -eq 0 ] && directorys=`pwd` || directorys=$@
+
+linkchk () {
+    for element in $1/*; do
+    [ -h "$element" -a ! -e "$element" ] && echo \"$element\"
+    [ -d "$element" ] && linkchk $element    #递归调用
+    done
+}
+
+for directory in $directorys; do
+    if [ -d $directory ]
+	then linkchk $directory
+	else 
+	    echo "$directory is not a directory"
+	    echo "Usage: $0 dir1 dir2 ..."
+    fi
+done
+
+exit 0
+
+#************************************************#
+#
+# 【例】zmore
+#
+#************************************************#
+
+#!/bin/bash
+
+NOARGS=65
+NOTFOUND=66
+NOTGZIP=67
+
+if [ $# -eq 0 ]                               # 最好就使用if [ $# -eq 0 ]，因为使用if [ -z "$1" ]，
+                                              #+在zmore "" arg2 arg3这种情况下错误.
+then
+  echo "Usage: `basename $0` filename" >&2    # 错误消息输出到stderr.
+  exit $NOARGS
+fi  
+
+filename=$1
+
+if [ ! -f "$filename" ]                       # 将$filename引用起来, 这样允许其中包含空白字符. 
+then
+  echo "File $filename not found!" >&2
+  exit $NOTFOUND
+fi  
+
+if [ ${filename##*.} != "gz" ]
+then
+  echo "File $1 is not a gzipped file!"
+  exit $NOTGZIP
+fi  
+
+zcat $1 | more
+
+exit $?
+
+
+#************************************************#
+#
+# 【例】求最大公约数
+#
+#************************************************#
+
+#!/bin/bash
+
+#  两个整数的"最大公约数" (gcd)，就是两个整数所能够同时整除的最大的数. 
+
+#  Euclid算法：
+#  定理：设a=qb+r，其中a，b，q，r都是整数，则gcd(a,b)=gcd(b,r)，即gcd(a,b)=gcd(b,a%b)
+#+ 证明方法一：
+#+ a可以表示成a = kb + r，则r = a mod b
+#+ 假设d是a,b的一个公约数，即d|a, d|b，而r = a - kb，因此d|r
+#+ 因此d是(b,a mod b)的公约数
+#+ 反之，假设d是(b,a mod b)的公约数，则d | b , d |r ，但是a = kb +r
+#+ 因此d也是(a,b)的公约数，因此(a,b)和(b,a mod b)的公约数是一样的，其最大公约数也必然相等，得证
+#+
+#+ 证明方法二：
+#+ 设c是a，b的最大公约数，即c=gcd（a，b），则有a=mc，b=nc，其中m，n为正整数，且m，n互为质数
+#+ 由r= a mod b可知，r= a- qb 其中，q是正整数
+#+ 则r=a-qb=mc-qnc=（m-qn）c
+
+#  程序实现：
+#  在每一次循环中，(a, b)-->(b, a%b)-->(a%b, b%(a%b))...
+#+ 即，被除数<--除数，除数<--余数，直到余数=0（0可以被任何数整除，但是0不能整除任何数）.
+#+ 在最后一次循环中, gcd = 被除数.
+
+ARGS=2
+E_BADARGS=65
+
+if [ $# -ne "$ARGS" ]
+then
+  echo "Usage: `basename $0` first-number second-number"
+  exit $E_BADARGS
+fi
+
+gcd ()
+{
+  dividend=$1
+  divisor=$2
+
+  remainder=1
+
+  until [ "$remainder" -eq 0 ]
+  do
+    let "remainder = $dividend % $divisor"
+    dividend=$divisor
+    divisor=$remainder
+  done
+}
+
+gcd $1 $2
+
+echo; echo "GCD of $1 and $2 = $dividend"; echo
+
+exit 0
+
+
+#************************************************#
+#
+# 【例】$*和$@的区别
+#
+#************************************************#
+
+#!/bin/bash
+
+set -- "First one" "second" "third:one" "" "Fifth: :one"
+
+echo
+
+echo 'IFS unchanged, using "$*"'
+c=0
+for i in "$*"
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+echo 'IFS unchanged, using $*'
+c=0
+for i in $*
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+echo 'IFS unchanged, using "$@"'
+c=0
+for i in "$@"
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+echo 'IFS unchanged, using $@'
+c=0
+for i in $@
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+IFS=:
+echo 'IFS=":", using "$*"'
+c=0
+for i in "$*"
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+echo 'IFS=":", using $*'
+c=0
+for i in $*
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+var=$*
+echo 'IFS=":", using "$var" (var=$*)'
+c=0
+for i in "$var"
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+echo 'IFS=":", using $var (var=$*)'
+c=0
+for i in $var
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+var="$*"
+echo 'IFS=":", using $var (var="$*")'
+c=0
+for i in $var
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+echo 'IFS=":", using "$var" (var="$*")'
+c=0
+for i in "$var"
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+echo 'IFS=":", using "$@"'
+c=0
+for i in "$@"
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+echo 'IFS=":", using $@'
+c=0
+for i in $@
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+var=$@
+echo 'IFS=":", using $var (var=$@)'
+c=0
+for i in $var
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+echo 'IFS=":", using "$var" (var=$@)'
+c=0
+for i in "$var"
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+var="$@"
+echo 'IFS=":", using "$var" (var="$@")'
+c=0
+for i in "$var"
+    do echo "$((c+=1)): [$i]"
+done
+echo ---
+
+echo 'IFS=":", using $var (var="$@")'
+c=0
+for i in $var
+    do echo "$((c+=1)): [$i]"
+done
+
+echo
+
+exit 0
+
+
+#************************************************#
+#
+# 【例】模拟getopt
+#
+#************************************************#
+
+#!/bin/bash
+
+getopt_simple ()
+{
+	echo "Parameter are '$*'"
+
+	until [ -z $1 ]
+	do
+		echo "Processing parameter is '$1'"
+		
+		if [ ${1:0:1} = '/' ];then
+			tmp=${1:1}									#去掉开头的/
+			parameter=${tmp%%*=}
+			value=${tmp##*=}
+			
+			echo "Parameter:'$parameter', value:'$value'"
+			eval $parameter=$value
+		fi
+	
+	shift
+	done
+}
+
+
+#************************************************#
+#
+# 【例】修改文件扩展名
+#
+#************************************************#
+
+#!/bin/bash	
+# 将指定目录中所有的*.gif文件都重命名为*.jpg
+
+E_BADARGS=65
+
+case $# in
+   0|1)                           # 竖线"|"在这里表示"或"操作.
+   echo "Usage: `basename $0` old_file_suffix new_file_suffix"
+   exit $E_BADARGS                # 如果只有0个或1个参数的话, 那么就退出脚本.
+   ;;
+esac
+
+for filename in /tmp/*.$1
+do
+	mv $filename ${filename%$1}$2
+done
+
+exit 0
+
+
+#************************************************#
+#
+# 【例】while循环
+#
+#************************************************#
+
+#!/bin/bash
+
+var1=unset
+previous=$var1
+
+while echo "previous-variable = $previous"
+      echo
+	  previous=$var1
+	  [ "var1" != end ]
+do
+    echo "input various #1(end to exit)"
+    read var1
+    echo "variable #1 = $var1"
+done
+
+exit 0
+
+
+#************************************************#
+#
+# 【例】倒序参数位置
+#
+#************************************************#
+
+#!/bin/bash
+
+set a\ b c d\ e;                       #\ 为转义空格，因此为3个值
+OIFS=$IFS; IFS=:
+
+until [ $# -eq 0 ]
+do
+    k=$1:$k
+    echo "### k = "$k""
+    shift
+done
+
+set $k
+
+for i
+do
+    echo $i
+done
+
+IFS=$OIFS
+
+exit 0
+
+
+#************************************************#
+#
+# 【例】使用getopts命令来来读取传递给脚本的选项/参数
+#
+#************************************************#
+
+#!/bin/bash
+
+NO_ARGS=0
+NO_ARGS=65
+
+while getopts ":mnopq:rs" Option            #  q后面接:表示q后面必须跟参数
+do                                          #+ 最开始的:表示，如果q不带参数（通常会报错），屏蔽错误
+    case $option in
+        m         ) echo "option -m- [OPTIND=${OPTIND}]";;
+        n | o | p ) echo "option -$option- [OPTIND=${OPTIND}]";;
+		q         ) echo "option -q- [OPTIND=${OPTIND}] with argument \"$OPTARG\"";;
+	esac
+done
+
+shift $(($OPTIND - 1))
+exit 0

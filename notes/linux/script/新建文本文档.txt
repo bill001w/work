@@ -1,0 +1,118 @@
+所有源码包都放在了lamp目录下
+cd/lamp/libxml2-2.6.30
+./configure--prefix=/usr/local/libxml2/
+make
+makeinstall
+cd/lamp/libmcrypt-2.5.8
+./configure--prefix=/usr/local/libmcrypt/
+make
+makeinstall
+cd/lamp/libmcrypt-2.5.8/libltdl
+./configure--enable-ltdl-install
+make
+makeinstall
+cd/lamp/zlib-1.2.3
+./configure
+make
+makeinstall
+cd/lamp/libpng-1.2.31
+./configure--prefix=/usr/local/libpng/
+make
+makeinstall
+mkdir/usr/local/jpeg6
+mkdir/usr/local/jpeg6/bin
+mkdir/usr/local/jpeg6/lib
+mkdir/usr/local/jpeg6/include
+mkdir-p/usr/local/jpeg6/man/man1
+cd/lamp/jpeg-6b
+./configure--prefix=/usr/local/jpeg6/--enable-shared--enable-static
+make
+makeinstall
+cd/lamp/freetype-2.3.5
+./configure--prefix=/usr/local/freetype/
+make
+makeinstall
+cd/lamp/autoconf-2.61
+./configure
+make
+makeinstall
+(注意：安装gd之前，修改gd源码包目录下的gd_png.c
+进入该文件，找到“#includepng.h”改成“/usr/local/libpng/include/png.h”
+cd/lamp/gd-2.0.35
+./configure--prefix=/usr/local/gd2/--with-jpeg=/usr/local/jpeg6/--with-freetype=/usr/local/freetype/
+make
+makeinstall
+cd/lamp/httpd-2.2.9
+./configure--prefix=/usr/local/apache2/--sysconfdir=/etc/httpd/--with-included-apr--disable-userdir--enable-so--enable-deflate=shared--enable-expires=shared--enable-rewrite=shared--enable-static-support
+make
+makeinstall
+/usr/local/apache2/bin/apachectlstart
+echo"/usr/local/apache2/bin/apachectlstart">>/etc/rc.d/rc.sysinit
+cd/lamp/ncurses-5.6
+./configure--with-shared--without-debug--without-ada--enable-overwrite
+make
+makeinstall
+mysql的安装（新版mysql使用的是cmake进行编译的，所以使用之前请检查系统是否装了cmake。）
+1.groupaddmysql//所以在这里我们要建一个msyql的用户和组
+2.useradd-gmysqlmysql-s/usr/sbin/nologin
+3.mkdir/usr/local/mysql//创建目录
+4.mkdir/usr/local/mysql/data
+进入mysql-5.5.13的解压目录：
+cmake.-DCMAKE_INSTALL_PREFIX=/usr/local/mysql-DMYSQL_DATADIR=/usr/local/mysql/data-DDEFAULT_CHARSET=utf8-DDEFAULT_COLLATION=utf8_general_ci-DEXTRA_CHARSETS=all-DENABLED_LOCAL_INFILE=1
+make
+makeinstall
+cmake参数说明：
+-DCMAKE_INSTALL_PREFIX=/usr/local/mysql//安装目录
+-DINSTALL_DATADIR=/usr/local/mysql/data//数据库存放目录
+-DDEFAULT_CHARSET=utf8　　　　//使用utf8字符
+-DDEFAULT_COLLATION=utf8_general_ci//校验字符
+-DEXTRA_CHARSETS=all　　　　//安装所有扩展字符集
+-DENABLED_LOCAL_INFILE=1　　//允许从本地导入数据
+配置
+1、设置目录权限
+1、设置目录权限
+cd /usr/local/mysql
+chown -R root:mysql .　//把当前目录中所有文件的所有者所有者设为root，所属组为mysql。
+chown -R mysql:mysql data
+cp support-files/my-medium.cnf /etc/my.cnf　//将mysql的启动服务添加到系统服务中
+2、创建系统数据库的表
+scripts/mysql_install_db --user=mysql
+3、设置环境变量
+vi /root/.bash_profile在PATH=$PATH:$HOME/bin添加参数为：PATH=$PATH:$HOME/bin:/usr/local/mysql/bin:/usr/local/mysql/lib
+source /root/.bash_profile
+4、手动启动mysql
+scripts/mysql_install_db --user=mysql
+cd /usr/local/mysql
+./bin/mysqld_safe --user=mysql & 　 //启动MySQL，但不能停止启动日志写在此文件下：/usr/local/mysql/data/localhost.err关闭MySQL服务。
+mysqladmin -u root -p shutdown //关闭mysql。
+5、另一种简单的启动mysql的方法
+cp support-files/mysql.server  /etc/init.d/mysql　　　//将mysql的启动服务添加到系统服务中注意：主要是将mysql.server拷贝到/etc/init.d中，命名为mysql。在有的系统中，mysql.server在/usr/local/mysql/share/mysql/mysql.server中，而本系统中，mysql.server在/usr/local/mysql/support-files/mysql.server中。
+service mysql.server start
+service mysql.server stop
+service mysql.server restart
+6、设置数据库密码
+mysqladmin -u root password "newpass"
+mysqladmin -u root password oldpass "newpass"  //更改密码
+php的安装：
+cd/lamp/php-5.3.6
+./configure--prefix=/usr/local/php/--with-config-file-path=/usr/local/php/etc/--with-apxs2=/usr/local/apache2/bin/apxs--with-mysql=/usr/local/mysql/--with-libxml-dir=/usr/local/libxml2/--with-jpeg-dir=/usr/local/jpeg6/--with-freetype-dir=/usr/local/freetype/--with-gd=/usr/local/gd2/--with-mcrypt=/usr/local/libmcrypt/--with-mysqli=/usr/local/mysql/bin/mysql_config--enable-soap--enable-mbstring=all--enable-sockets
+make
+makeinstall
+cpphp.ini-dist/usr/local/php/etc/php.ini（或者cpphp.ini-development/usr/local/php/etc/php.ini）
+echo"Addtypeapplication/x-httpd-php.php.phtml">>/etc/httpd/httpd.conf
+/usr/local/apache2/bin/apachectlrestart
+php测试：
+<?php
+phpinfo();
+?>
+安装php出现的问题及解决方法
+题一：编译php5.3.*时报gd_compat.c:4:18:error:png.h和gd_compat.c:8:22:error:jpeglib.h错误
+解决方法：
+(1)安装gd之前，修改gd源码包目录下的gd_png.c
+进入该文件，找到“#includepng.h”改成“/usr/local/libpng/include/png.h”
+(2)修改php-5.3.6/ext/gd/libgd/gd_compat.c的代码,把文件里面的png.h和jpeglib.h路径改成自己环境下的绝对路径，比如：/usr/local/libpng/include/png.h和/usr/local/jpeg/include/jpeglib.h,
+并在#include<jpeglib.h>前面增加一行#include<stdio.h>
+然后makeclean
+重新configure、make、makeinstall就可以了
+问题二：libltdl.so.3:cannotopensharedobjectfile:Nosuchfileordirectory
+解决方法：ln-s/usr/local/lib/libltdl.so.3/usr/lib/libltdl.so.3
