@@ -1,0 +1,110 @@
+/* 重置样式 */
+fieldset {
+    padding: 0;
+    margin: 0;
+    border: 0;
+    // Chrome and Firefox set a `min-width: -webkit-min-content;` on fieldsets,
+    // so we reset that to ensure it behaves more like a standard block element.
+    // See https://github.com/twbs/bootstrap/issues/12359.
+    min-width: 0;
+}
+
+legend {
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin-bottom: $margin-base;
+    font-size: $font-size-lg;
+    line-height: inherit;
+    color: $legend-color;
+    border: 0;
+    border-bottom: 1px solid $legend-border-color;
+}
+
+label {
+    display: inline-block;
+    // 用于和form-control区分开
+    margin-bottom: 5px;
+    // Force IE8 to wrap long content (see https://github.com/twbs/bootstrap/issues/13141)
+    max-width: 100%;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+input[type="search"] {
+    box-sizing: border-box;
+}
+
+// Search inputs in iOS
+//
+// This overrides the extra rounded corners on search inputs in iOS so that our
+// `.form-control` class can properly style them. Note that this cannot simply
+// be added to `.form-control` as it's not specific enough. For details, see
+// https://github.com/twbs/bootstrap/issues/11586.
+
+input[type="search"] {
+    -webkit-appearance: none;
+}
+
+// 重置radio和checkbox，使控件和文字保持同一行
+input[type="radio"],
+input[type="checkbox"] {
+    display: inline-block;
+    vertical-align: middle;
+    margin-bottom: 2px;
+}
+
+input[type="file"] {
+    display: block;
+}
+
+input[type="range"] {
+    display: block;
+    width: 100%;
+}
+
+select[multiple],
+select[size] {
+    height: auto;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+    &[disabled],
+    &.disabled,
+    fieldset[disabled] & {
+        cursor: not-allowed;
+    }
+}
+
+// Special styles for iOS temporal inputs
+//
+// In Mobile Safari, setting `display: block` on temporal inputs causes the
+// text within the input to become vertically misaligned.
+// As a workaround, we set a pixel line-height that matches the
+// given height of the input. Since this fucks up everything else, we have to
+// appropriately reset it for Internet Explorer and the size variations.
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"] {
+    line-height: $input-height-base;
+    // IE8+ misaligns the text within date inputs, so we reset
+    line-height: #{$line-height-base} \0
+;
+
+    &.input-sm {
+        line-height: $input-height-small;
+    }
+    &.input-lg {
+        line-height: $input-height-large;
+    }
+}
+
+output {
+    display: block;
+    padding-top: $padding-sym-base;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+    color: $input-color;
+}

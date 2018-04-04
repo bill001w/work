@@ -1,0 +1,26 @@
+.container-fluid {
+    @include container-fixed;
+}
+
+// 将媒体查询写入container中
+.container {
+    @include container-fixed;
+
+    @each $breakpoint in map_keys($screens) {
+        @if $breakpoint == xs {
+            // 默认100%显示，1）手机屏，2）兼容不支持媒体查询，因此不用加媒体查询
+            // 之所以用if判断，目的是这里是循环，不能多次出现这个样式
+            width: map_get($containers, xs);
+            padding-left: ($grid-gutter-width / 2);
+            padding-right: ($grid-gutter-width / 2);
+        } @else {
+            // 使用min-width媒体查询
+            @include media-breakpoint-up($breakpoint, $screens) {
+                // 传递mixin内容块
+                width: map_get($containers, $breakpoint);
+                padding-left: 0;
+                padding-right: 0;
+            }
+        }
+    }
+}
